@@ -44,3 +44,26 @@ export const decideVerification = asyncHandler(async (req, res) => {
   if (!rows[0]) return res.status(404).json({ error: "User not found" });
   res.json(rows[0]);
 });
+
+/* GET /api/admin/users  — manageable accounts (no admins) */
+export const listUsers = asyncHandler(async (req, res) => {
+  const { rows } = await query(`
+    SELECT u.user_id AS id, u.full_name AS name, u.email,
+           CASE u.role WHEN 'influencer' THEN 'Influencer'
+                       WHEN 'media_house' THEN 'Media House' ELSE 'Admin' END AS type,
+           u.role, u.is_verified AS verified, to_char(u.created_at,'YYYY-MM-DD') AS joined
+    FROM users u WHERE u.role <> 'admin' ORDER BY u.created_at DESC`);
+  res.json(rows);
+});
+
+/* DELETE /api/admin/users/:userId  — remove an influencer or media house */
+export const deleteUser = asyncHandler(async (req, res) => {
+  const chk = await query("SELECT role FROM users WHERE user_id=$1", [
+    req.params.userId,
+  ]);
+  if (!chk.rows[0]) return res.status(404).json({ error: "User not found" });
+  if (chk.rows[0].role === "admin")
+    return res.status(403).json({ error: "Cannot delete an admin account" });
+  await query("DELETE FROM users WHERE user_id=$1", [req.params.userId]);
+  res.json({ ok: true, id: Number(req.params.userId) });
+});
