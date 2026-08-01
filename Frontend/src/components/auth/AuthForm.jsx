@@ -37,6 +37,17 @@ const ROLE_META = {
   },
 };
 
+const DEMO_ACCOUNTS = {
+  influencer: {
+    email: "maya@collab.dev",
+    password: "Password123",
+  },
+  brand: {
+    email: "volt@collab.dev",
+    password: "Password123",
+  },
+};
+
 export default function AuthForm({ role, mode }) {
   const meta = ROLE_META[role];
   const isSignup = mode === "signup";
@@ -46,9 +57,16 @@ export default function AuthForm({ role, mode }) {
     register,
     handleSubmit,
     setError,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm();
 
+  const fillDemo = () => {
+    const demo = DEMO_ACCOUNTS[role];
+
+    setValue("email", demo.email);
+    setValue("password", demo.password);
+  };
   const onSubmit = async (data) => {
     try {
       if (isSignup) await signup({ role, ...data });
@@ -335,6 +353,45 @@ export default function AuthForm({ role, mode }) {
               {isSignup ? "Sign in" : "Sign up"}
             </Link>
           </p>
+          {!isSignup && role !== "admin" && (
+            <div
+              style={{
+                border: "1px solid var(--border)",
+                borderRadius: 12,
+                padding: 16,
+                background: "var(--surface)",
+                marginTop: 20,
+              }}
+            >
+              <p
+                style={{
+                  fontWeight: 600,
+                  marginBottom: 12,
+                }}
+              >
+                Try a demo account
+              </p>
+
+              <button
+                type="button"
+                onClick={fillDemo}
+                className="btn btn-secondary"
+                style={{ width: "100%" }}
+              >
+                Use Demo {meta.label} Account
+              </button>
+
+              <p
+                className="muted"
+                style={{
+                  marginTop: 8,
+                  fontSize: ".85rem",
+                }}
+              >
+                Email and password will be filled automatically.
+              </p>
+            </div>
+          )}
         </motion.div>
       </main>
     </div>
